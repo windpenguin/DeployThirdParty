@@ -74,6 +74,9 @@ cmake -G %GENERATOR% ../.. -DJSONCPP_WITH_CMAKE_PACKAGE=ON -DCMAKE_INSTALL_PREFI
 
 if exist %install_prefix_win% rd /q /s %install_prefix_win%
 
+rem because original project not specify different install path from debug and release,
+rem here will install debug/release first, then move to debug/release folder.
+
 cmake --build . --config Debug --target install || goto :error
 if not exist %install_prefix_win%\Debug mkdir %install_prefix_win%\Debug
 move %install_prefix_win%\include %install_prefix_win%\Debug\include

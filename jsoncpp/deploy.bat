@@ -6,11 +6,13 @@ set INIT_DIR=%1
 set REPO_URL=%2
 set REPO_VER=%3
 set COMPILER=%4
-set ARCH=%5
+set RT=%5
+set ARCH=%6
 echo INIT_DIR: %INIT_DIR%
 echo REPO_URL: %REPO_URL%
 echo REPO_VER: %REPO_VER%
 echo COMPILER: %COMPILER%
+echo RT: %RT%
 echo ARCH: %ARCH%
 
 rem compiler with underline
@@ -44,6 +46,7 @@ if defined ARCH (
 ) else (
 	set install_prefix=%repo_path:"=%/%compiler_ul:"=%/Win32
 )
+set install_prefix=%install_prefix%/%RT:"=%
 set install_prefix_win=%install_prefix:/=\%
 echo install_prefix: %install_prefix%
 echo install_prefix_win: %install_prefix_win%
@@ -52,25 +55,36 @@ if not exist %repo_path_win% mkdir %repo_path_win%
 cd /d %repo_path_win%
 
 if not exist %repo_name% (
-	echo "Try to download source code from %REPO_URL%..."
+	echo Try to download source code from %REPO_URL%...
 	git clone https://github.com/open-source-parsers/jsoncpp.git
 	cd %repo_name%
 	git checkout -b %REPO_VER% %REPO_VER%
+	
+	rem add runtime config mt/md to CMakeLists.txt
+	ren CMakeLists.txt CMakeListsTemp.txt
+
 	cd ..
 )
 cd %repo_name%
+
+if exist CMakeLists.txt del /f CMakeLists.txt
+%~dp0AddRT.py -r%RT%
+
 if not exist build mkdir build
 cd build
 
-if exist %generator_ul% rd /q /s %generator_ul%
-:wait_rd_generator_ul
-timeout 2
-if exist %generator_ul% (
-	goto wait_rd_generator_ul
-)
 if not exist %generator_ul% mkdir %generator_ul%
 cd %generator_ul%
-cmake -G %GENERATOR% ../.. -DJSONCPP_WITH_CMAKE_PACKAGE=ON -DCMAKE_INSTALL_PREFIX=%install_prefix%
+
+if exist %RT% rd /q /s %RT%
+:wait_rd_rt
+timeout 2
+if exist %RT% (
+	goto wait_rd_rt
+)
+if not exist %RT% mkdir %RT%
+cd %RT%
+cmake -G %GENERATOR% ../../.. -DJSONCPP_WITH_CMAKE_PACKAGE=ON -DCMAKE_INSTALL_PREFIX=%install_prefix%
 
 if exist %install_prefix_win% rd /q /s %install_prefix_win%
 

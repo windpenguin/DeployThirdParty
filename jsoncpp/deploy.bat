@@ -82,26 +82,20 @@ timeout 2
 if exist %RT% (
 	goto wait_rd_rt
 )
-if not exist %RT% mkdir %RT%
+mkdir %RT%
 cd %RT%
-cmake -G %GENERATOR% ../../.. -DJSONCPP_WITH_CMAKE_PACKAGE=ON -DCMAKE_INSTALL_PREFIX=%install_prefix%
 
-if exist %install_prefix_win% rd /q /s %install_prefix_win%
-
-rem because original project not specify different install path from debug and release,
-rem here will install debug/release first, then move to debug/release folder.
-
-cmake --build . --config Debug --target install || goto :error
-if not exist %install_prefix_win%\Debug mkdir %install_prefix_win%\Debug
-move %install_prefix_win%\include %install_prefix_win%\Debug\include
-move %install_prefix_win%\lib %install_prefix_win%\Debug\lib
-timeout 2
-
-cmake --build . --config Release --target install || goto :error
-if not exist %install_prefix_win%\Release mkdir %install_prefix_win%\Release
-move %install_prefix_win%\include %install_prefix_win%\Release\include
-move %install_prefix_win%\lib %install_prefix_win%\Release\lib
-timeout 2
+for %%i in (Debug Release) do (
+	echo Generate %%i
+	
+	mkdir %%i
+	cd %%i
+	cmake -G %GENERATOR% ../../../.. -DJSONCPP_WITH_CMAKE_PACKAGE=ON -DCMAKE_INSTALL_PREFIX=%install_prefix%/%%i
+	
+	if exist %install_prefix_win%\%%i rd /q /s %install_prefix_win%\%%i
+	
+	cmake --build . --config %%i --target install || goto :error
+	cd ..
+)
 
 :error
-pause

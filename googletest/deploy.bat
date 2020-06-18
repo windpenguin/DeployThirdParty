@@ -6,14 +6,15 @@ set INIT_DIR=%1
 set REPO_URL=%2
 set REPO_VER=%3
 set COMPILER=%4
-set RT=%5
-set ARCH=%6
+set ARCH=%5
+set RT=%6
+
 echo INIT_DIR: %INIT_DIR%
 echo REPO_URL: %REPO_URL%
 echo REPO_VER: %REPO_VER%
 echo COMPILER: %COMPILER%
-echo RT: %RT%
 echo ARCH: %ARCH%
+echo RT: %RT%
 
 rem compiler with underline
 set compiler_ul=%COMPILER: =_%
@@ -55,20 +56,13 @@ if not exist %repo_path_win% mkdir %repo_path_win%
 cd /d %repo_path_win%
 
 if not exist %repo_name% (
-	echo Try to download source code from %REPO_URL%...
+	echo Try to download source code from %REPO_URL%
 	git clone %REPO_URL%
 	cd %repo_name%
 	git checkout -b %REPO_VER% %REPO_VER%
-	
-	rem add runtime config mt/md to CMakeLists.txt
-	ren CMakeLists.txt CMakeListsTemp.txt
-
 	cd ..
 )
 cd %repo_name%
-
-if exist CMakeLists.txt del /f CMakeLists.txt
-%~dp0AddRT.py -r%RT%
 
 if not exist build mkdir build
 cd build
@@ -90,7 +84,7 @@ for %%i in (Debug Release) do (
 	
 	mkdir %%i
 	cd %%i
-	cmake -G %GENERATOR% ../../../.. -DJSONCPP_WITH_CMAKE_PACKAGE=ON -DCMAKE_INSTALL_PREFIX=%install_prefix%/%%i
+	cmake -G %GENERATOR% ../../../.. -DCMAKE_INSTALL_PREFIX=%install_prefix%/%%i
 	
 	if exist %install_prefix_win%\%%i rd /q /s %install_prefix_win%\%%i
 	
